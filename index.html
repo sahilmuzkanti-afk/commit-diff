@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Compare code snapshots locally with GitHub-style line and word diffs.">
+  <title>Commit Diff Viewer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>Commit Diff Viewer</h1>
+      <p>Compare files, folders or ZIP snapshots without uploading your code anywhere.</p>
+    </div>
+    <div class="privacy-pill">Runs locally in your browser</div>
+  </header>
+
+  <main class="app-shell">
+    <section class="compare-grid" aria-label="Commit inputs">
+      <article class="commit-card" data-drop-side="old">
+        <div class="card-heading">
+          <div>
+            <span class="eyebrow">BASE</span>
+            <h2 id="old-source-title">Commit 1</h2>
+          </div>
+          <div class="card-actions">
+            <button class="secondary-button file-button" data-side="old">Choose files</button>
+            <input class="file-input" data-side="old" type="file" multiple>
+            <button class="secondary-button folder-button" data-side="old">Folder</button>
+            <input class="folder-input" data-side="old" type="file" webkitdirectory directory multiple>
+            <button class="ghost-button edit-preview-button hidden" data-side="old">Edit code</button>
+            <button class="ghost-button clear-button" data-side="old">Clear</button>
+          </div>
+        </div>
+
+        <div class="file-tabs dynamic-tabs" id="old-file-tabs" role="tablist" aria-label="Commit 1 files"></div>
+
+        <div class="editor-shell" data-editor-side="old">
+          <div class="editor-edit-mode" id="old-edit-mode">
+            <div class="line-gutter" id="old-gutter" aria-hidden="true"></div>
+            <textarea class="code-editor" id="old-editor" spellcheck="false" aria-label="Commit 1 code" placeholder="Paste code here, or drop files, a folder, or a ZIP onto this panel..."></textarea>
+          </div>
+          <div class="aligned-preview hidden" id="old-aligned-preview" aria-label="Commit 1 aligned diff preview"></div>
+          <div class="change-minimap hidden" id="old-minimap" aria-label="Commit 1 change minimap"></div>
+        </div>
+        <div class="drop-hint"><strong>Drop files, folders or ZIPs here</strong><span>Default tabs: index.html · style.css · script.js</span></div>
+      </article>
+
+      <article class="commit-card" data-drop-side="new">
+        <div class="card-heading">
+          <div>
+            <span class="eyebrow">CHANGED</span>
+            <h2 id="new-source-title">Commit 2</h2>
+          </div>
+          <div class="card-actions">
+            <button class="secondary-button file-button" data-side="new">Choose files</button>
+            <input class="file-input" data-side="new" type="file" multiple>
+            <button class="secondary-button folder-button" data-side="new">Folder</button>
+            <input class="folder-input" data-side="new" type="file" webkitdirectory directory multiple>
+            <button class="ghost-button edit-preview-button hidden" data-side="new">Edit code</button>
+            <button class="ghost-button clear-button" data-side="new">Clear</button>
+          </div>
+        </div>
+
+        <div class="file-tabs dynamic-tabs" id="new-file-tabs" role="tablist" aria-label="Commit 2 files"></div>
+
+        <div class="editor-shell" data-editor-side="new">
+          <div class="editor-edit-mode" id="new-edit-mode">
+            <div class="line-gutter" id="new-gutter" aria-hidden="true"></div>
+            <textarea class="code-editor" id="new-editor" spellcheck="false" aria-label="Commit 2 code" placeholder="Paste code here, or drop files, a folder, or a ZIP onto this panel..."></textarea>
+          </div>
+          <div class="aligned-preview hidden" id="new-aligned-preview" aria-label="Commit 2 aligned diff preview"></div>
+          <div class="change-minimap hidden" id="new-minimap" aria-label="Commit 2 change minimap"></div>
+        </div>
+        <div class="drop-hint"><strong>Drop files, folders or ZIPs here</strong><span>Default tabs: index.html · style.css · script.js</span></div>
+      </article>
+    </section>
+
+    <section class="compare-actions" aria-label="Comparison actions">
+      <button id="swap-button" class="secondary-button" title="Swap Commit 1 and Commit 2">⇄ Swap commits</button>
+      <label class="switch-control" title="Treat indentation and repeated whitespace as equal while comparing">
+        <input type="checkbox" id="ignore-whitespace">
+        <span>Ignore whitespace</span>
+      </label>
+      <div id="status-message" class="status-message" role="status" aria-live="polite">Ready to compare.</div>
+      <button id="compare-button" class="primary-button">Compare commits</button>
+    </section>
+
+    <section id="results" class="results-panel" aria-live="polite">
+      <div class="results-placeholder" id="results-placeholder">
+        <div class="placeholder-icon">±</div>
+        <h2>Your diff will appear here</h2>
+        <p>Add code to both sides and press <strong>Compare commits</strong>.</p>
+      </div>
+
+      <div id="results-content" class="results-content hidden">
+        <div class="summary-header">
+          <div>
+            <span class="eyebrow">COMPARISON</span>
+            <h2>Commit 1 → Commit 2</h2>
+          </div>
+          <div class="summary-actions">
+            <button id="copy-patch" class="secondary-button">Copy patch</button>
+            <button id="download-patch" class="secondary-button">Download .diff</button>
+            <div class="view-toggle" aria-label="Diff layout">
+              <button class="view-button active" data-view="unified">Unified</button>
+              <button class="view-button" data-view="split">Split</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="summary-grid">
+          <div class="summary-card"><span>Files changed</span><strong id="files-changed">0</strong></div>
+          <div class="summary-card additions"><span>Additions</span><strong id="total-additions">+0</strong></div>
+          <div class="summary-card deletions"><span>Deletions</span><strong id="total-deletions">-0</strong></div>
+          <div class="summary-card"><span>Changed rows</span><strong id="total-logical-changed">0</strong></div>
+          <div class="summary-card"><span>Modified rows</span><strong id="total-modified">0</strong></div>
+          <div class="summary-card"><span>Changed</span><strong id="total-percentage">0%</strong></div>
+        </div>
+
+        <section class="file-summary-section" aria-label="Per-file summary">
+          <div class="section-heading-row">
+            <h3>Files</h3>
+            <span id="file-summary-caption" class="muted-caption"></span>
+          </div>
+          <div class="file-summary-list" id="file-summary-list"></div>
+        </section>
+
+        <div class="diff-toolbar">
+          <div class="toolbar-group">
+            <button id="previous-change" class="toolbar-button">↑ Previous change</button>
+            <button id="next-change" class="toolbar-button">↓ Next change</button>
+            <span id="change-position" class="toolbar-status">No change selected</span>
+          </div>
+          <div class="toolbar-group search-group">
+            <input id="diff-search" class="search-input" type="search" autocomplete="off" spellcheck="false" placeholder="Search both commits…">
+            <button id="previous-search" class="toolbar-button compact" title="Previous search result">↑</button>
+            <button id="next-search" class="toolbar-button compact" title="Next search result">↓</button>
+            <span id="search-position" class="toolbar-status">0 matches</span>
+          </div>
+          <div class="toolbar-group toggles">
+            <label class="switch-control small"><input id="collapse-unchanged" type="checkbox" checked><span>Collapse unchanged</span></label>
+            <label class="switch-control small"><input id="only-changes" type="checkbox"><span>Only changes</span></label>
+          </div>
+        </div>
+
+        <div class="result-tabs" id="result-tabs" role="tablist" aria-label="Compared files"></div>
+        <div class="diff-card">
+          <div class="diff-file-header">
+            <div class="diff-file-title">
+              <span class="file-icon">⌘</span>
+              <strong id="diff-filename">index.html</strong>
+              <span id="diff-file-status" class="status-badge">modified</span>
+            </div>
+            <div class="file-stats">
+              <span class="add-text" id="file-additions">+0</span>
+              <span class="delete-text" id="file-deletions">-0</span>
+              <span id="file-percentage">0%</span>
+            </div>
+          </div>
+          <div id="diff-output" class="diff-output"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>Commit Diff Viewer</span>
+    <span>Nothing is uploaded. Everything stays on this device.</span>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
